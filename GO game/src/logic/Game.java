@@ -5,38 +5,47 @@ public class Game  {
     //attribut pour le nouveau plateau
     private Scanner sc;
 
-    private listCommands histo;
+    private CommandsManager cmds;
     public void gameSession() {
         sc = new Scanner(System.in);
         board = new Board(19);
-        histo = new listCommands();
+        cmds = new CommandsManager();
 
         String commande;
         do {
-            if (sc.hasNextInt()){
+            if (sc.hasNextInt()) {
                 int id = sc.nextInt();
                 commande = sc.next();
-                histo.inject(id, commande);
-                System.out.println("=" + id);
+                if (!cmds.verifValidity(commande)) {
+                    System.out.println("? invalid command");
+                } else {
+                    cmds.injectHisto(id, commande);
+                    System.out.println("=" + id);
+                }
+
             } else {
                 commande = sc.next();
-                System.out.println("=");
+                if (!cmds.verifValidity(commande)) {
+                    System.out.println("? invalid command");
+                } else {System.out.println("=");}
             }
 
-            if (commande.equals("showboard")){
+            if (commande.equals("showboard")) {
                 board.showBoard();
-            }
-            else if (commande.equals("boardsize")){
-                int newSize = sc.nextInt();
-                board.changeSize(newSize);
+            } else if (commande.equals("boardsize")) {
+                    int newSize = sc.nextInt();
+                    board.changeSize(newSize);
             }
 
-        } while (!commande.equals("quit"));
+
+
+
+        } while (!commande.equals("quit")) ;
         sc.close();
-
         //sortie de l'interface
-
     }
+
+
 
     public static void main(String[] args) {
         Game g1 = new Game();
