@@ -4,25 +4,36 @@ public class Game  {
     private Board board;
     //attribut pour le nouveau plateau
     private Scanner sc;
+
+    private listCommands histo;
     public void gameSession() {
         sc = new Scanner(System.in);
         board = new Board(19);
+        histo = new listCommands();
+
         String commande;
         do {
-            commande = sc.next();
-            if (commande.equals("showboard")){
+            if (sc.hasNextInt()){
+                int id = sc.nextInt();
+                commande = sc.next();
+                histo.inject(id, commande);
+                System.out.println("=" + id);
+            } else {
+                commande = sc.next();
                 System.out.println("=");
+            }
+
+            if (commande.equals("showboard")){
                 board.showBoard();
             }
             else if (commande.equals("boardsize")){
                 int newSize = sc.nextInt();
-                System.out.println("=");
                 board.changeSize(newSize);
             }
 
         } while (!commande.equals("quit"));
         sc.close();
-        System.out.println("=");
+
         //sortie de l'interface
 
     }
