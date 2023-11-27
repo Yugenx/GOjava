@@ -1,11 +1,12 @@
 package logic;
 import java.util.Scanner;
-public class Game  {
+public class Game {
     private Board board;
     //attribut pour le nouveau plateau
     private Scanner sc;
 
     private CommandsManager cmds;
+
     public void gameSession() {
         sc = new Scanner(System.in);
         board = new Board(19);
@@ -16,33 +17,78 @@ public class Game  {
             if (sc.hasNextInt()) {
                 int id = sc.nextInt();
                 commande = sc.next();
-                if (!cmds.verifValidity(commande)) {
-                    System.out.println("? invalid command");
+                if (!cmds.verifValidity(commande)) { //à mettre dans une fonction
+                    System.out.println("?" + id + " invalid command");
                 } else {
                     cmds.injectHisto(id, commande);
-                    System.out.println("=" + id);
+                    if (commande.equals("showboard")) {
+                        System.out.println("=" + id);
+                        board.showBoard();
+                    } else if (commande.equals("boardsize")) {
+                        if (sc.hasNextInt()) {
+                            boardsizeManip(id);
+                        } else if (!sc.hasNextInt()) {
+                            System.out.println("? boardsize not an integer");
+                            sc.next();
+                        }
+                    } else if (commande.equals("quit")) {
+                        sc.close();
+                        System.out.println("=" + id);
+                        break;
+                    }
+
                 }
 
             } else {
                 commande = sc.next();
                 if (!cmds.verifValidity(commande)) {
                     System.out.println("? invalid command");
-                } else {System.out.println("=");}
+                } else {
+                    if (commande.equals("showboard")) {
+                        System.out.println("=");
+                        board.showBoard();
+                    } else if (commande.equals("boardsize")) {
+                        if (sc.hasNextInt()) {
+                            boardsizeManip();
+                        } else if (!sc.hasNextInt()) {
+                            System.out.println("? boardsize not an integer");
+                        }
+                    } else if (commande.equals("quit")) {
+                        sc.close();
+                        System.out.println("=");
+                        break;
+                    }
+                }
             }
+        } while (true);
 
-            if (commande.equals("showboard")) {
-                board.showBoard();
-            } else if (commande.equals("boardsize")) {
-                    int newSize = sc.nextInt();
-                    board.changeSize(newSize);
-            }
-
-
-
-
-        } while (!commande.equals("quit")) ;
         sc.close();
         //sortie de l'interface
+    }
+
+
+    public void boardsizeManip(int id) {
+
+        int newSize = sc.nextInt();
+        if (newSize > 25) {
+            System.out.println("? unacceptable size");
+        } else {
+            board.changeSize(newSize);
+            System.out.println("=" + id);
+        }
+    }
+
+
+
+    public void boardsizeManip(){
+
+            int newSize = sc.nextInt();
+            if (newSize > 25) {
+                System.out.println("? unacceptable size");
+            } else {
+                board.changeSize(newSize);
+                System.out.println("=");
+            }
     }
 
 

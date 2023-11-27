@@ -40,8 +40,6 @@ public class CommandsManager {
     }
 
 
-
-
     //on pourra rajouter dans cette classe les fonctions qui correspondent aux commandes "list_commands" et known_command"
 }
 
