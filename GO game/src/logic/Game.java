@@ -1,102 +1,108 @@
 package logic;
+import IHM.displayManager;
+
 import java.util.Scanner;
+import java.util.Arrays;
 public class Game {
     private Board board;
-    //attribut pour le nouveau plateau
+    private displayManager display;
     private Scanner sc;
-
     private CommandsManager cmds;
 
+    private static final int MAX_BOARD_SIZE = 25;
+    private static final int MIN_BOARD_SIZE = 1;
+
+    public Game(displayManager display, CommandsManager commandsManager) {
+        this.display = display;
+        this.cmds = commandsManager;
+    }
     public void gameSession() {
-        sc = new Scanner(System.in);
+        Scanner sc = new Scanner(System.in);
         board = new Board(19);
-        cmds = new CommandsManager();
-
-        String commande;
-        do {
-            if (sc.hasNextInt()) {
-                int id = sc.nextInt();
-                commande = sc.next();
-                if (!cmds.verifValidity(commande)) { //à mettre dans une fonction
-                    System.out.println("?" + id + " invalid command");
-                } else {
-                    cmds.injectHisto(id, commande);
-                    if (commande.equals("showboard")) {
-                        System.out.println("=" + id);
-                        board.showBoard();
-                    } else if (commande.equals("boardsize")) {
-                        if (sc.hasNextInt()) {
-                            boardsizeManip(id);
-                        } else if (!sc.hasNextInt()) {
-                            System.out.println("? boardsize not an integer");
-                            sc.next();
-                        }
-                    } else if (commande.equals("quit")) {
-                        sc.close();
-                        System.out.println("=" + id);
-                        break;
-                    }
-
+        while(true){
+            String[] commande = sc.nextLine().split(" ");
+            String id;
+            if(Arrays.asList(commande).contains("quit")){
+                try{
+                    int num = Integer.parseInt(commande[0]);
+                    id = String.valueOf(num);
+                }catch(NumberFormatException e){
+                    id = "";
                 }
-
-            } else {
-                commande = sc.next();
-                if (!cmds.verifValidity(commande)) {
-                    System.out.println("? invalid command");
-                } else {
-                    if (commande.equals("showboard")) {
-                        System.out.println("=");
-                        board.showBoard();
-                    } else if (commande.equals("boardsize")) {
-                        if (sc.hasNextInt()) {
-                            boardsizeManip();
-                        } else if (!sc.hasNextInt()) {
-                            System.out.println("? boardsize not an integer");
-                        }
-                    } else if (commande.equals("quit")) {
-                        sc.close();
-                        System.out.println("=");
-                        break;
-                    }
-                }
+                display.showOkMess(id);
+                sc.close();
+                break;
+            } else{
+                actionGTP(commande);
             }
-        } while (true);
+        }
 
-        sc.close();
-        //sortie de l'interface
     }
 
+    public void actionGTP(String[] c){
+        String[] commande = c.clone();
+        String id;
+        try{
+            int num = Integer.parseInt(c[0]);
+            id = String.valueOf(num);
+            commande = Arrays.copyOfRange(c,1,c.length);
+        } catch(NumberFormatException e){
+            id = "";
+        }
+        switch (commande[0]) {
+            case "boardsize":
+                boardsize(id, commande);
+                break;
+            case "showboard":
+                showboard(id);
+                break;
+            case "clear_board":
+                clearBoard(id);
+                break;
+            case "play":
+                play(id);
+                break;
+            default:
+                display.showError(id, "unknow command");
+        }
 
-    public void boardsizeManip(int id) {
 
-        int newSize = sc.nextInt();
-        if (newSize > 25) {
-            System.out.println("? unacceptable size");
-        } else {
-            board.changeSize(newSize);
-            System.out.println("=" + id);
+    }
+
+    public void showboard(String id){
+        display.showOkMess(id);
+        display.show(board.toString());
+    }
+
+    public void clearBoard(String id){
+        display.showOkMess(id);
+        board.clear();
+    }
+
+    public void boardsize(String id, String[] c){
+        if(c.length < 2) {
+            display.showError(id, "boardsize not an integer");
+            return;
+        }
+        try {
+            int newSize = Integer.parseInt(c[1]);
+            if (newSize <= MAX_BOARD_SIZE && newSize >= MIN_BOARD_SIZE){
+                board.changeSize(newSize);
+                display.showOkMess(id);
+            } else { display.showError(id, "unacceptable size");}
+
+        } catch(NumberFormatException e){
+            display.showError(id, "boardsize not an integer");
+            return;
         }
     }
 
+    public void play(String id){
 
 
-    public void boardsizeManip(){
-
-            int newSize = sc.nextInt();
-            if (newSize > 25) {
-                System.out.println("? unacceptable size");
-            } else {
-                board.changeSize(newSize);
-                System.out.println("=");
-            }
     }
 
 
 
-    public static void main(String[] args) {
-        Game g1 = new Game();
-        g1.gameSession();
-
-    }
 }
 

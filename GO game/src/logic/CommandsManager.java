@@ -32,12 +32,13 @@ public class CommandsManager {
         for (String command : list) {
             System.out.println(command);
         }
-
     }
 
     public boolean verifValidity(String s){
         return list.contains(s);
     }
+
+
 
 
     //on pourra rajouter dans cette classe les fonctions qui correspondent aux commandes "list_commands" et known_command"
