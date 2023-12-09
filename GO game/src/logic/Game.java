@@ -97,7 +97,10 @@ public class Game {
         }
     }
 
-    public void play(String id){
+    public void play(String id, String[] coord, String color){
+        if (board.isFree(coord)){
+
+        };
 
 
     }

@@ -9,6 +9,8 @@ public class Board {
     int size;
     String[][] board;
 
+    private static final int MAX_BOARD_SIZE = 25;
+
 
     public Board(int size) {
         this.size = size;
@@ -93,5 +95,31 @@ public class Board {
             }
         }
         System.out.println("ça marche tqt");
+    }
+
+    public int obtainColumn(String letter){
+        int compteur = 1;
+        for (char c = 'A'; c <= 'Z'; c++) {
+            if (letter.charAt(0) == c){
+                return compteur;
+            }
+            compteur++;
+        }
+        return compteur;
+    }
+
+    public int obtainLine(String number){
+        for (int i = 1; i < (size - 1); i++ ){
+                if (Integer.parseInt(number) == (size-1) - i){
+                    return (size-1) - i;
+                }
+        }
+        return -1;
+    }
+
+    public boolean isFree(String[] coord){
+        int c = obtainColumn(coord[0]);
+        int l = obtainLine(coord[1]);
+        return board[l][c].equals(".");
     }
 }
