@@ -10,6 +10,8 @@ public class Game {
     private Scanner sc;
     private CommandsManager cmds;
 
+
+
     private static final int MAX_BOARD_SIZE = 25;
     private static final int MIN_BOARD_SIZE = 1;
 
@@ -20,7 +22,8 @@ public class Game {
     public void gameSession() {
         Scanner sc = new Scanner(System.in);
         board = new Board(19);
-        ArrayList<Intersection> intersections = new ArrayList<>();
+
+
         while(true){
             String[] commande = sc.nextLine().split(" ");
             String id;
@@ -107,6 +110,12 @@ public class Game {
         try {
             String[] arg = Arrays.copyOfRange(command,1,command.length);
             String colorStr = arg[0];
+            try {
+                StoneColor color = StoneColor.valueOf(colorStr.toUpperCase());
+            } catch (IllegalArgumentException e){
+                display.showError(id, " invalid color or coordinate");
+                return;
+            }
             StoneColor color = StoneColor.valueOf(colorStr.toUpperCase());
             char column = arg[1].charAt(0);
             int row = Integer.parseInt(arg[1].substring(1));
@@ -118,7 +127,9 @@ public class Game {
                 display.showError(id, " illegal move");
                 return;
             } else {
+
                 board.playMove(column,row,colorStr);
+
                 display.showOkMess(id);
             }
         } catch(NumberFormatException e){
