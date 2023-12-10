@@ -1,6 +1,7 @@
 package logic;
 import IHM.displayManager;
 
+import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.Arrays;
 public class Game {
@@ -19,6 +20,7 @@ public class Game {
     public void gameSession() {
         Scanner sc = new Scanner(System.in);
         board = new Board(19);
+        ArrayList<Intersection> intersections = new ArrayList<>();
         while(true){
             String[] commande = sc.nextLine().split(" ");
             String id;
@@ -60,7 +62,7 @@ public class Game {
                 clearBoard(id);
                 break;
             case "play":
-                play(id);
+                play(id, commande);
                 break;
             default:
                 display.showError(id, "unknow command");
@@ -97,10 +99,33 @@ public class Game {
         }
     }
 
-    public void play(String id, String[] coord, String color){
-        if (board.isFree(coord)){
+    public void play(String id, String[] command){
+        if(command.length < 3) {
+            display.showError(id, "invalid color or coordinate");
+            return;
+        }
+        try {
+            String[] arg = Arrays.copyOfRange(command,1,command.length);
+            String colorStr = arg[0];
+            StoneColor color = StoneColor.valueOf(colorStr.toUpperCase());
+            char column = arg[1].charAt(0);
+            int row = Integer.parseInt(arg[1].substring(1));
 
-        };
+            if (!board.verifyCoord(column, row)){
+                display.showError(id, " invalid color or coordinate");
+                return;
+            } else if (!board.isFree(column,row)){
+                display.showError(id, " illegal move");
+                return;
+            } else {
+                board.playMove(column,row,colorStr);
+                display.showOkMess(id);
+            }
+        } catch(NumberFormatException e){
+            display.showError(id, " invalid color or coordinate");
+            return;
+        }
+
 
 
     }

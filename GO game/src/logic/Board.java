@@ -4,6 +4,8 @@ package logic;
 import java.util.ArrayList;
 import java.util.List;
 
+import static logic.StoneColor.getStoneColor;
+
 public class Board {
 
     int size;
@@ -97,10 +99,11 @@ public class Board {
         System.out.println("ça marche tqt");
     }
 
-    public int obtainColumn(String letter){
+    public int obtainColumn(char letter){
         int compteur = 1;
         for (char c = 'A'; c <= 'Z'; c++) {
-            if (letter.charAt(0) == c){
+            if (c =='I'){continue;}
+            if (letter == c){
                 return compteur;
             }
             compteur++;
@@ -108,18 +111,35 @@ public class Board {
         return compteur;
     }
 
-    public int obtainLine(String number){
-        for (int i = 1; i < (size - 1); i++ ){
-                if (Integer.parseInt(number) == (size-1) - i){
-                    return (size-1) - i;
-                }
-        }
-        return -1;
+    public int obtainLine(int row){
+        return (size + 1) - row;
     }
 
-    public boolean isFree(String[] coord){
-        int c = obtainColumn(coord[0]);
-        int l = obtainLine(coord[1]);
+    public boolean isFree(char column, int row){
+        int c = obtainColumn(column);
+        int l = obtainLine(row);
         return board[l][c].equals(".");
+    }
+
+    public boolean verifyCoord(char column, int row) {
+        int columnIndex = obtainColumn(column);
+        if (columnIndex < 1 || columnIndex >= size) {
+            return false;
+        }
+
+        int rowIndex = obtainLine(row);
+        if (rowIndex < 1 || rowIndex >= size) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public void playMove(char column, int row, String color) {
+        int columnIndex = obtainColumn(column);
+        int rowIndex = obtainLine(row);
+        StoneColor stoneColor = getStoneColor(color);
+        board[rowIndex][columnIndex] = stoneColor.getSymbol();
+
     }
 }
