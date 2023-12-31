@@ -34,7 +34,7 @@ public class consoleManager {
 
     public void gameSession() throws InterruptedException {
         Scanner sc = new Scanner(System.in);
-        board = new Board(6, "A1 B1 A2 A3");
+        board = new Board(19);
         players = new HashMap<>();
         players.put(StoneColor.WHITE, new consolePlayer());
         players.put(StoneColor.BLACK, new consolePlayer());
