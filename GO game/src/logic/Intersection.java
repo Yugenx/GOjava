@@ -9,21 +9,12 @@ public class Intersection {
     private int row;
     private int column;
 
-    private boolean isCaptured = false;
-
-    public boolean isCaptured() {
-        return isCaptured;
-    }
 
     public int getRow() {
         return row;
     }
 
 
-
-    public void setCaptured(boolean captured) {
-        isCaptured = captured;
-    }
 
     public int getColumn() {
         return column;

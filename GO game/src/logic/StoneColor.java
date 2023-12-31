@@ -22,5 +22,9 @@ public enum StoneColor {
         }
         return null;
     }
+
+    public static StoneColor getOppositeColor(StoneColor color) {
+        return (color == BLACK) ? WHITE : BLACK;
+    }
 }
 

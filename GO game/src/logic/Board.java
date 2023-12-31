@@ -1,11 +1,9 @@
 package logic;
 
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
+import static logic.StoneColor.getOppositeColor;
 import static logic.StoneColor.getStoneColor;
 
 public class Board {
@@ -13,19 +11,48 @@ public class Board {
     int size;
     String[][] board;
 
-    private ArrayList<Intersection> intersections = new ArrayList<>();
+    private final ArrayList<Intersection> intersections = new ArrayList<>();
 
-    private ArrayList<Group> groups = new ArrayList<>();
+    private final ArrayList<Group> groups = new ArrayList<>();
 
     private static final int MAX_BOARD_SIZE = 25;
+
+    private Map<StoneColor, Integer> scoreMap;
 
     public ArrayList<Intersection> getIntersections() {
         return intersections;
     }
 
+
+
     public Board(int size) {
         this.size = size;
         createBoard();
+    }
+
+    /*public Board(int size, String coord){ pas complet à revoir
+        this.size = size;
+        createBoard();
+        String[] moves = coord.split(" ");
+        int cmpt = 0;
+        for (String position : moves){
+            int column = obtainColumn(position.charAt(0));
+            int row = obtainLine(Integer.parseInt(position.substring(1)));
+            cmpt++;
+            if (cmpt%2 != 0){
+                board[row][column]= StoneColor.BLACK.getSymbol();
+                Intersection newI = new Intersection(row, column, StoneColor.BLACK);
+                intersections.add(newI);
+            } else {
+                board[row][column]= StoneColor.WHITE.getSymbol();
+                Intersection newI = new Intersection(row, column, StoneColor.WHITE);
+                intersections.add(newI);
+            }
+        }
+    }*/
+
+    public int getSize() {
+        return size;
     }
 
     public void createBoard() {
@@ -41,7 +68,10 @@ public class Board {
             }
         }
         intersections.clear();
-
+        groups.clear();
+        scoreMap = new HashMap<>();
+        scoreMap.put(StoneColor.WHITE, 0);
+        scoreMap.put(StoneColor.BLACK, 0);
 
     }
 
@@ -52,14 +82,20 @@ public class Board {
                 b.append(board[i][j] + " ");
             }
             if (i == board.length - 2) {
-                b.append("     WHITE (O) has captured " + getCapturedStone("white") + "  stones");
+                b.append("     WHITE (O) has captured " + scoreMap.get(StoneColor.WHITE) + "  stones");
 
             } else if (i == board.length - 1) {
-                b.append("     BLACK (X) has captured " + getCapturedStone("black") + " stones");
+                b.append("     BLACK (X) has captured " + scoreMap.get(StoneColor.BLACK) + " stones");
             }
             b.append("\n");
         }
         return b.toString();
+    }
+
+    public void changeScore(StoneColor color, int num) {
+        int valeurActuelle = scoreMap.get(color);
+        int newVal = valeurActuelle + num;
+        scoreMap.put(color,newVal);
     }
 
 
@@ -109,6 +145,7 @@ public class Board {
             }
         }
         intersections.clear();
+        groups.clear();
     }
 
     public int obtainColumn(char letter){
@@ -147,6 +184,18 @@ public class Board {
         return true;
     }
 
+    public boolean verifyCoord(int column, int row) {
+        if (column < 1 || column> size ) {
+            return false;
+        }
+
+        if (row< 1 || row > size) {
+            return false;
+        }
+
+        return true;
+    }
+
     public void playMove(char column, int row, String color) {
         int columnIndex = obtainColumn(column);
         int rowIndex = obtainLine(row);
@@ -154,32 +203,36 @@ public class Board {
         board[rowIndex][columnIndex] = stoneColor.getSymbol();
         Intersection newIntersection = new Intersection(rowIndex, columnIndex, stoneColor);
         intersections.add(newIntersection);
-        checkInpactNewStone(newIntersection);
-        //printIntersections();
-        //printGroups();
+        if (intersections.size() <= 1){
+            return;
+        } else{
+            checkInpactNewStone(newIntersection);
+        }
     }
 
     public void checkInpactNewStone(Intersection intersection){
-        checkCapture(intersection);
-        if (intersection.isCaptured()){
+        if (checkCapture(intersection)){
             return;
         } else {
-            checkIsInGroup(intersection);
+            checkIsInGroup(intersection); //pour l'intégrer à un groupe déjà existant s'il faut ou en créer un nouveau
             checkIfCapturing(intersection);
         }
 
     }
 
-    private void checkIfCapturing(Intersection intersection) {
+    private boolean checkIfCapturing(Intersection intersection) { //sert à vérifier que la nouvelle pierre posée permet une capture ou non
         List<int[]> liberties = intersection.getCoordNeighbours();
         for (int[] coord : liberties) {
             for (Intersection stoneOnBoard : intersections) {
                 if (Arrays.equals(stoneOnBoard.getCoordinates(), coord) && stoneOnBoard.getStoneColor() != intersection.getStoneColor()){
                     boolean adjacentIsInGroup = false;
                     for (Group group : groups) {
-                        List<int[]> groupCoor = group.getAllCoordinates();
+                        if(group.containsIntersection(stoneOnBoard.getCoordinates())){
+                            return checkCaptureGroup(group);
+                        }
+                        /*List<int[]> groupCoor = group.getAllCoordinates();
                         int r = stoneOnBoard.getRow();
-                        int c =stoneOnBoard.getColumn();
+                        int c = stoneOnBoard.getColumn();
                         int row1;
                         int c1;
                         for (int i = 0; i < groupCoor.size(); i++){
@@ -187,80 +240,62 @@ public class Board {
                              c1 = groupCoor.get(i)[1];
 
                             if (row1 == r && c == c){
-                                //System.out.println("je suis rentré dans la boucle");
+                                //System.out.println("je suis rentré dans la boucle - débug");
                                 checkCaptureGroup(group);
                                 adjacentIsInGroup = true;
                             }
-                        }
-
-
-
-
-
-
+                        }*/
                     }
                     if (!adjacentIsInGroup) {
-                        checkCapture(stoneOnBoard);
+                        return checkCapture(stoneOnBoard);
                     }
                 }
             }
-        }
 
+        }
+        return false;
     }
 
-    private void checkCaptureGroup(Group group) {
+    private boolean checkCaptureGroup(Group group) {
         List<int[]> liberties = group.getNeighboursCoordinates();
-
-        List<int[]> groupCoordinates = group.getAllCoordinates();
-
-        //System.out.println("Liberties:");
-
-
+        //List<int[]> groupCoordinates = group.getAllCoordinates();
+        boolean allOccupied = true;
         for (int[] coord : liberties) {
             int r = coord[0];
             int c = coord[1];
             boolean toDelete = false;
-
-            if (r < 1 || r > size || c < 1 || c > size) {
+            if (!verifyCoord(c,r)) {
+                toDelete = true;
+            } else if (group.containsIntersection(coord)){
                 toDelete = true;
             }
-
-
-            int row1;
-            int c1;
-
-            for (int i = 0; i < groupCoordinates.size(); i++) {
-                row1 = groupCoordinates.get(i)[0];
-                c1 = groupCoordinates.get(i)[1];
-
-                if (row1 == r && c1 == c) {
-                    toDelete = true;
-                }
-            }
-
             if (toDelete){continue;}
 
-            //System.out.println(Arrays.toString(coord));
-
-            boolean isOccupied = false;
+            boolean isLibOccupied = false;
 
             for (Intersection stoneOnBoard : intersections) {
                 if (Arrays.equals(stoneOnBoard.getCoordinates(), coord) && stoneOnBoard.getStoneColor() != group.getColor()) {
-                    isOccupied = true;
+                    isLibOccupied = true;
                     break;
                 }
             }
-
-            if (!isOccupied) {
-                group.setCapturedStateForAll(false);
-                return;
+            if (!isLibOccupied){
+                allOccupied = false;
+                break;
             }
         }
-        group.setCapturedStateForAll(true);
-        List<int[]> allCoordinates = group.getAllCoordinates();
-        for (int[] coordGroup : allCoordinates){
-            board[coordGroup[0]][coordGroup[1]] = ".";
+        if (allOccupied){
+            List<int[]> allCoordinates = group.getAllCoordinates();
+            for (int[] coordGroup : allCoordinates){
+                board[coordGroup[0]][coordGroup[1]] = ".";
+                intersections.remove(getIntersectionAt(coordGroup[0],coordGroup[1]));
+                changeScore(getOppositeColor(group.getColor()), 1);
+            }
+            groups.remove(group);
         }
+
+
+        return allOccupied;
     }
 
     private void checkIsInGroup(Intersection intersection) {
@@ -279,7 +314,7 @@ public class Board {
             }
             if (!foundNearGroup) {
                 Intersection adjacentIntersection = getIntersectionAt(coord[0], coord[1]);
-                if (adjacentIntersection != null && !adjacentIntersection.isCaptured() && adjacentIntersection.getStoneColor() == intersection.getStoneColor()) {
+                if (adjacentIntersection != null && adjacentIntersection.getStoneColor() == intersection.getStoneColor()) {
                     Group newGroup = new Group(intersection.getStoneColor());
                     newGroup.addStone(intersection);
                     newGroup.addStone(adjacentIntersection);
@@ -296,60 +331,42 @@ public class Board {
             mergedGroup.addStone(intersection);
             groups.add(mergedGroup);
         } else if (matchingGroups.size() == 1) {
-            matchingGroups.get(0).addStone(intersection);
+            matchingGroups.getFirst().addStone(intersection);
         }
 
     }
 
 
-    private void checkCapture(Intersection intersection) {
+    private boolean checkCapture(Intersection intersection) {
         List<int[]> liberties = intersection.getCoordNeighbours();
-        for (int[] coord : liberties) {
-            if (coord[0] < 1 || coord[0] > size || coord[1] < 1 || coord[1] > size){
+       boolean allOccupied = true;
+        for (int[] coordLib : liberties) {
+            //pour sauter les coordonnées correspondant aux lignes et colonnes du tableau contenant les num de lignes et colonnes
+            if (!verifyCoord(coordLib[0], coordLib[1])){
                 continue;
             }
-            boolean isOccupied = false;
-
+            boolean isLibOccupied = false;
             for (Intersection stoneOnBoard : intersections) {
-                if (Arrays.equals(stoneOnBoard.getCoordinates(), coord) && stoneOnBoard.getStoneColor() != intersection.getStoneColor()) {
-                    isOccupied = true;
-                    break;
+                if (Arrays.equals(stoneOnBoard.getCoordinates(), coordLib)){
+                    if (stoneOnBoard.getStoneColor() != intersection.getStoneColor()){
+                        isLibOccupied = true;
+                        break;
+                    }
                 }
             }
-
-            if (!isOccupied) {
-                intersection.setCaptured(false);
-                return;
+            if (!isLibOccupied){
+                allOccupied = false;
+                break;
             }
         }
-        intersection.setCaptured(true);
-        int[] coord = intersection.getCoordinates();
-        board[coord[0]][coord[1]]= ".";
-    }
-
-    public void printIntersections() {
-        for (Intersection intersection : intersections) {
-            System.out.println("Coordonnées : (" + intersection.getRow() + ", " + intersection.getColumn() + ")");
-            System.out.println("Couleur : " + intersection.getStoneColor());
-            System.out.println("Capturée : " + intersection.isCaptured());
-            System.out.println("---------------------");
+        if (allOccupied) {
+            int[] coord = intersection.getCoordinates();
+            board[coord[0]][coord[1]]= ".";
+            intersections.remove(intersection);
+            changeScore(getOppositeColor(intersection.getStoneColor()), 1);
+            return true;
         }
-    }
-
-    private void printGroups() {
-        System.out.println("=== Groups ===");
-        for (int i = 0; i < groups.size(); i++) {
-            Group group = groups.get(i);
-            System.out.println("Group " + (i + 1) + ":");
-            System.out.println("  Color: " + group.getColor());
-            System.out.println("  Stones: ");
-            for (Intersection stone : group.getStones()) {
-                System.out.println("    - Coords: (" + stone.getRow() + ", " + stone.getColumn() + ")");
-                System.out.println("    - Color: " + stone.getStoneColor());
-                System.out.println("    - Captured: " + stone.isCaptured());
-            }
-            System.out.println("================");
-        }
+        else {return false;}
     }
 
     public Intersection getIntersectionAt(int row, int column) {
@@ -361,19 +378,17 @@ public class Board {
         return null;
     }
 
-    public int getCapturedStone(String color){
-        StoneColor colorStone = getStoneColor(color);
-        int count = 0;
 
-        for (Intersection intersection : intersections) {
-            if (intersection.isCaptured() && intersection.getStoneColor() == colorStone) {
-                count++;
+    public boolean isFull() {
+        boolean b = true;
+        int lastIndex = board.length - 1;
+        for (int i = 1; i < lastIndex; i++) {
+            for (int j = 1; j < lastIndex; j++) {
+                if (board[i][j] == ".") {
+                    b = false;
+                }
             }
         }
-
-        return count;
-
+        return b;
     }
-
-
 }

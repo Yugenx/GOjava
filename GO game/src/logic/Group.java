@@ -32,9 +32,10 @@ public class Group {
     }
 
     public boolean containsIntersection(int[] coord) {
-        int row = coord[0];
-        int column = coord[1];
-        return stones.contains(new Intersection(row, column, this.color));
+        if (stones.contains(getStoneAt(coord))){
+            return true;
+        }
+        return false;
     }
 
     public List<int[]> getNeighboursCoordinates() {
@@ -58,11 +59,11 @@ public class Group {
         return null;
     }
 
-    public void setCapturedStateForAll(boolean capturedState) {
+    /*public void setCapturedStateForAll(boolean capturedState) {
         for (Intersection intersection : stones) {
-            intersection.setCaptured(capturedState);
+            intersection.setDisponible(capturedState);
         }
-    }
+    }*/
 
     public List<int[]> getAllCoordinates() {
         List<int[]> coordinatesList = new ArrayList<>();
