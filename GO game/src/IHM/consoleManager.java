@@ -13,16 +13,20 @@ import java.util.Scanner;
 
 public class consoleManager {
 
-    private Board board;
-
-    public consoleManager() {
-    }
+    private IBoard board;
 
     private Map<StoneColor, IPlayer> players;
     private StoneColor currentPlayerColor;
 
     private static final int MAX_BOARD_SIZE = 25;
     private static final int MIN_BOARD_SIZE = 1;
+
+
+
+    private int passCount;
+
+    public consoleManager() {
+    }
 
     public StoneColor getCurrentPlayerColor() {
         return currentPlayerColor;
@@ -32,17 +36,34 @@ public class consoleManager {
         this.currentPlayerColor = currentPlayerColor;
     }
 
+    public int getPassCount() {
+        return passCount;
+    }
+
+    public void setPassCount(int passCount) {
+        this.passCount = passCount;
+    }
+
+    public void addPassCount(int pass) {
+        this.passCount = this.passCount + pass;
+    }
+
+    public IPlayer currentPlayer() {
+        return players.get(getCurrentPlayerColor());
+    }
+
     public void gameSession() throws InterruptedException {
         Scanner sc = new Scanner(System.in);
         board = new Board(19);
         players = new HashMap<>();
+        setPassCount(0);
         players.put(StoneColor.WHITE, new consolePlayer());
         players.put(StoneColor.BLACK, new consolePlayer());
         setCurrentPlayerColor(StoneColor.BLACK);
-
-
         String[] commande;
-        while(!board.isFull()){
+
+        while(!board.isFull() && getPassCount() != 2){
+            System.out.println(getPassCount());
             if (!(currentPlayer() instanceof consolePlayer)){
 
                 char columnAlea = currentPlayer().getColumn(board.getSize());
@@ -68,21 +89,20 @@ public class consoleManager {
                 }catch(NumberFormatException e){
                     id = "";
                 }
-                showOkMess(id);
+                showOkMess(id, "le score final est : BLACK - WHITE : " + board.getFinalScore(StoneColor.BLACK) + " - " + board.getFinalScore(StoneColor.WHITE));
                 sc.close();
                 break;
             } else{
                 actionGTP(commande);
+
             }
         }
+        showOkMess("", "le score final est : BLACK - WHITE : " + board.getFinalScore(StoneColor.BLACK) + " - " + board.getFinalScore(StoneColor.WHITE));
         sc.close();
         return;
     }
 
-    public IPlayer currentPlayer() {
 
-        return players.get(getCurrentPlayerColor());
-    }
 
 
     public void endTurn(){
@@ -117,10 +137,17 @@ public class consoleManager {
                 break;
             case "play":
                 play(id, commande);
-
                 break;
             case "player":
                 player(id, commande);
+                break;
+            case "liberties":
+                getLiberties(id, commande);
+                break;
+            case "pass":
+                addPassCount(1);
+                showOkMess(id, "le joueur " + getCurrentPlayerColor() + " a passé son tour");
+                endTurn();
                 break;
             default:
                 showError(id, "unknow command");
@@ -202,6 +229,9 @@ public class consoleManager {
             } else {
 
                 board.playMove(column,row,colorStr);
+                if (getPassCount() > 0){
+                    addPassCount(-1);
+                }
                 endTurn();
                 showOkMess(id);
             }
@@ -209,6 +239,25 @@ public class consoleManager {
             showError(id, " invalid color or coordinate");
         }
 
+    }
+
+    public void getLiberties(String id, String[] commande){
+        if(commande.length < 2) {
+            showError(id, "invalid coordinate");
+            return;
+        }
+        char column = commande[1].charAt(0);
+        int row = Integer.parseInt(commande[1].substring(1));
+
+        if (!board.verifyCoord(column, row)){
+            showError(id, " invalid coordinate");
+        } else if (board.isFree(column,row)){
+            showError(id, " there's no stone here");
+        } else {
+            int numberLib = board.getLiberties(column,row);
+            System.out.println("la pierre en " + commande[1] + " a " + numberLib + " libertés");
+
+        }
     }
 
 
@@ -220,6 +269,9 @@ public class consoleManager {
 
     public void showOkMess(String id){
         System.out.println("=" + id);
+    }
+    public void showOkMess(String id, String mess){
+        System.out.println("=" + id + " " +mess);
     }
 
 

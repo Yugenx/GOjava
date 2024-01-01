@@ -1,12 +1,14 @@
 package logic;
 
 
+import IHM.IBoard;
+
 import java.util.*;
 
 import static logic.StoneColor.getOppositeColor;
 import static logic.StoneColor.getStoneColor;
 
-public class Board {
+public class Board implements IBoard {
 
     int size;
     String[][] board;
@@ -15,10 +17,14 @@ public class Board {
 
     private final ArrayList<Group> groups = new ArrayList<>();
 
-    private static final int MAX_BOARD_SIZE = 25;
 
     private Map<StoneColor, Integer> scoreMap;
 
+    public void setScoreMap(Map<StoneColor, Integer> scoreMap) {
+        this.scoreMap = scoreMap;
+    }
+
+    @Override
     public ArrayList<Intersection> getIntersections() {
         return intersections;
     }
@@ -51,10 +57,12 @@ public class Board {
         }
     }*/
 
+    @Override
     public int getSize() {
         return size;
     }
 
+    @Override
     public void createBoard() {
         int trueSize = size + 2; //+2 pour compter les deux lignes et colonnes servant à mettre les coordonnéees
 
@@ -75,6 +83,7 @@ public class Board {
 
     }
 
+    @Override
     public String toString() {
         StringBuilder b = new StringBuilder();
         for (int i = 0; i < board.length; i++) {
@@ -92,6 +101,7 @@ public class Board {
         return b.toString();
     }
 
+    @Override
     public void changeScore(StoneColor color, int num) {
         int valeurActuelle = scoreMap.get(color);
         int newVal = valeurActuelle + num;
@@ -99,12 +109,14 @@ public class Board {
     }
 
 
+    @Override
     public void changeSize(int newSize) {
         this.size = newSize;
         createBoard();
 
     }
 
+    @Override
     public void createCoord() {
 
         int lastIndex = board.length - 1;
@@ -137,6 +149,7 @@ public class Board {
     }
 
 
+    @Override
     public void clear() {
         int lastIndex = board.length - 1;
         for (int i = 1; i < lastIndex; i++) {
@@ -148,6 +161,7 @@ public class Board {
         groups.clear();
     }
 
+    @Override
     public int obtainColumn(char letter){
         int compteur = 1;
         for (char c = 'A'; c <= 'Z'; c++) {
@@ -160,16 +174,19 @@ public class Board {
         return compteur;
     }
 
+    @Override
     public int obtainLine(int row){
         return (size + 1) - row;
     }
 
+    @Override
     public boolean isFree(char column, int row){
         int c = obtainColumn(column);
         int l = obtainLine(row);
         return board[l][c].equals(".");
     }
 
+    @Override
     public boolean verifyCoord(char column, int row) {
         int columnIndex = obtainColumn(column);
         if (columnIndex < 1 || columnIndex > size ) {
@@ -184,6 +201,7 @@ public class Board {
         return true;
     }
 
+    @Override
     public boolean verifyCoord(int column, int row) {
         if (column < 1 || column> size ) {
             return false;
@@ -196,6 +214,7 @@ public class Board {
         return true;
     }
 
+    @Override
     public void playMove(char column, int row, String color) {
         int columnIndex = obtainColumn(column);
         int rowIndex = obtainLine(row);
@@ -210,6 +229,7 @@ public class Board {
         }
     }
 
+    @Override
     public void checkInpactNewStone(Intersection intersection){
         if (checkCapture(intersection)){
             return;
@@ -230,21 +250,6 @@ public class Board {
                         if(group.containsIntersection(stoneOnBoard.getCoordinates())){
                             return checkCaptureGroup(group);
                         }
-                        /*List<int[]> groupCoor = group.getAllCoordinates();
-                        int r = stoneOnBoard.getRow();
-                        int c = stoneOnBoard.getColumn();
-                        int row1;
-                        int c1;
-                        for (int i = 0; i < groupCoor.size(); i++){
-                            row1 =groupCoor.get(i)[0];
-                             c1 = groupCoor.get(i)[1];
-
-                            if (row1 == r && c == c){
-                                //System.out.println("je suis rentré dans la boucle - débug");
-                                checkCaptureGroup(group);
-                                adjacentIsInGroup = true;
-                            }
-                        }*/
                     }
                     if (!adjacentIsInGroup) {
                         return checkCapture(stoneOnBoard);
@@ -369,6 +374,7 @@ public class Board {
         else {return false;}
     }
 
+    @Override
     public Intersection getIntersectionAt(int row, int column) {
         for (Intersection intersection : intersections) {
             if (intersection.getRow() == row && intersection.getColumn() == column) {
@@ -378,7 +384,42 @@ public class Board {
         return null;
     }
 
+    @Override
+    public int getLiberties(char column, int row){
+        Intersection intersection = getIntersectionAt(obtainLine(row),obtainColumn(column));
+        List<int[]> adjacentPos = intersection.getCoordNeighbours();
+        int cmpt = 0;
 
+        for (Group g : groups){
+            if (g.containsIntersection(intersection.getCoordinates())){
+                adjacentPos.clear();
+                adjacentPos = g.getNeighboursCoordinates();
+                break;
+            }
+        }
+        Iterator<int[]> iterator = adjacentPos.iterator();
+        while (iterator.hasNext()) {
+            int[] nextCoord = iterator.next();
+            if (!verifyCoord(nextCoord[1], nextCoord[0])){
+                iterator.remove();
+            }
+        }
+        for (int[] coord : adjacentPos){
+            boolean isOccupied = false;
+            for (Intersection i : intersections) {
+                if (Arrays.equals(i.getCoordinates(), coord)) {
+                    isOccupied = true;
+                    break;
+                }
+            }
+            if (!isOccupied) {
+                cmpt++;
+            }
+        }
+        return cmpt;
+    }
+
+    @Override
     public boolean isFull() {
         boolean b = true;
         int lastIndex = board.length - 1;
@@ -390,5 +431,27 @@ public class Board {
             }
         }
         return b;
+    }
+
+    protected Map<StoneColor, Integer> countStonesOnBoard() {
+        Map<StoneColor, Integer> stoneCountMap = new HashMap<>();
+
+        for (StoneColor color : StoneColor.values()) {
+            stoneCountMap.put(color, 0);
+        }
+
+        for (Intersection i : intersections) {
+            StoneColor stoneColor = i.getStoneColor();
+            int currentCount = stoneCountMap.get(stoneColor);
+            stoneCountMap.put(stoneColor, currentCount + 1);
+
+        }
+
+        return stoneCountMap;
+    }
+
+    public int getFinalScore (StoneColor color) {
+        changeScore(color, countStonesOnBoard().get(color));
+        return scoreMap.get(color);
     }
 }
