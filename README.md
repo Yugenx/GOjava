@@ -1,7 +1,4 @@
-# GOjava
-Idéalement les noires commencent.
-Alignement des strings des scores.
-Commandes privées pour débeuger. (liberties)
-Une norme dans GTP pour tester : Décrire une position précise.(ça va nous permettre de déboguer)
+Diagramme d'architecture de l'appliation :
 
+![archi](https://github.com/Yugenx/GOjava/assets/128364634/f15ee44d-e8e3-4131-918d-4d0466f6d843)
 
