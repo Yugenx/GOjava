@@ -3,16 +3,18 @@ package logic;
 import java.util.*;
 
 public class Group {
-    private StoneColor color;
+
     private Set<Intersection> stones;
 
-    public Group(StoneColor color) {
-        this.color = color;
+    public Group() {
         this.stones = new HashSet<>();
     }
 
     public StoneColor getColor() {
-        return color;
+        for (Intersection intersection : stones) {
+            return intersection.getStoneColor();
+        }
+        return null;
     }
 
     public Set<Intersection> getStones() {
@@ -59,11 +61,7 @@ public class Group {
         return null;
     }
 
-    /*public void setCapturedStateForAll(boolean capturedState) {
-        for (Intersection intersection : stones) {
-            intersection.setDisponible(capturedState);
-        }
-    }*/
+
 
     public List<int[]> getAllCoordinates() {
         List<int[]> coordinatesList = new ArrayList<>();

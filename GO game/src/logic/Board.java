@@ -320,7 +320,7 @@ public class Board implements IBoard {
             if (!foundNearGroup) {
                 Intersection adjacentIntersection = getIntersectionAt(coord[0], coord[1]);
                 if (adjacentIntersection != null && adjacentIntersection.getStoneColor() == intersection.getStoneColor()) {
-                    Group newGroup = new Group(intersection.getStoneColor());
+                    Group newGroup = new Group();
                     newGroup.addStone(intersection);
                     newGroup.addStone(adjacentIntersection);
                     groups.add(newGroup);
@@ -328,7 +328,7 @@ public class Board implements IBoard {
             }
         }
         if (matchingGroups.size() > 1) {
-            Group mergedGroup = new Group(intersection.getStoneColor());
+            Group mergedGroup = new Group();
             for (Group group : matchingGroups) {
                 mergedGroup.merge(group);
                 groups.remove(group);

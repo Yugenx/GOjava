@@ -63,7 +63,6 @@ public class consoleManager {
         String[] commande;
 
         while(!board.isFull() && getPassCount() != 2){
-            System.out.println(getPassCount());
             if (!(currentPlayer() instanceof consolePlayer)){
 
                 char columnAlea = currentPlayer().getColumn(board.getSize());
@@ -124,6 +123,9 @@ public class consoleManager {
             commande = Arrays.copyOfRange(c,1,c.length);
         } catch(NumberFormatException e){
             id = "";
+        }
+        if (commande.length == 0){
+            showError(id, "unknow command");
         }
         switch (commande[0]) {
             case "boardsize":
